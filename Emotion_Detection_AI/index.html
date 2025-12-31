@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEURAL EMOTION SCANNER</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #00ff9d;
+            --secondary: #00d4ff;
+            --tertiary: #ff0080;
+            --dark: #0a0e1a;
+            --darker: #050810;
+            --surface: rgba(10, 14, 26, 0.8);
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--darker);
+            color: #fff;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Animated background */
+        .cyber-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: linear-gradient(180deg, var(--darker) 0%, #0f1929 50%, var(--darker) 100%);
+            overflow: hidden;
+        }
+
+        .cyber-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 255, 157, 0.03) 2px, rgba(0, 255, 157, 0.03) 4px);
+            animation: scanlines 8s linear infinite;
+        }
+
+        .cyber-bg::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, rgba(0, 255, 157, 0.1) 0%, transparent 50%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes scanlines {
+            0% {
+                transform: translateY(0);
+            }
+
+            100% {
+                transform: translateY(4px);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 0.3;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(0, 255, 157, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 157, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .container {
+            position: relative;
+            z-index: 2;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 60px 20px;
+            position: relative;
+        }
+
+        .logo {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(2rem, 6vw, 4.5rem);
+            font-weight: 900;
+            letter-spacing: 8px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary), var(--tertiary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 80px rgba(0, 255, 157, 0.5);
+            margin-bottom: 15px;
+            animation: glitch 3s infinite;
+        }
+
+        @keyframes glitch {
+
+            0%,
+            90%,
+            100% {
+                transform: translate(0);
+            }
+
+            92% {
+                transform: translate(-2px, 2px);
+            }
+
+            94% {
+                transform: translate(2px, -2px);
+            }
+        }
+
+        .tagline {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(0.8rem, 2vw, 1.1rem);
+            color: var(--secondary);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            opacity: 0.9;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        @media (max-width: 1100px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .cyber-card {
+            background: var(--surface);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(0, 255, 157, 0.3);
+            border-radius: 15px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .cyber-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent 40%, rgba(0, 255, 157, 0.1) 50%, transparent 60%);
+            transform: rotate(45deg);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% {
+                transform: translateX(-100%) translateY(-100%) rotate(45deg);
+            }
+
+            100% {
+                transform: translateX(100%) translateY(100%) rotate(45deg);
+            }
+        }
+
+        .cyber-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 12px 48px rgba(0, 255, 157, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.4rem;
+            color: var(--primary);
+            margin-bottom: 25px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-header::before {
+            content: '◢';
+            font-size: 1.2rem;
+            color: var(--secondary);
+        }
+
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background: var(--darker);
+            border: 3px solid var(--primary);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: inset 0 0 30px rgba(0, 255, 157, 0.2), 0 0 40px rgba(0, 255, 157, 0.3);
+        }
+
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #canvas {
+            display: none;
+        }
+
+        .status-bar {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 1px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Orbitron', monospace;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ff4757;
+            box-shadow: 0 0 10px #ff4757;
+            animation: blink 2s infinite;
+        }
+
+        .status-dot.active {
+            background: var(--primary);
+            box-shadow: 0 0 15px var(--primary);
+        }
+
+        @keyframes blink {
+
+            0%,
+            50%,
+            100% {
+                opacity: 1;
+            }
+
+            25%,
+            75% {
+                opacity: 0.3;
+            }
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .cyber-btn {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            padding: 15px 25px;
+            border: 2px solid;
+            border-radius: 8px;
+            background: transparent;
+            color: #fff;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .cyber-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .cyber-btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(0, 255, 157, 0.3);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary);
+            color: var(--darker);
+            box-shadow: 0 0 30px var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            border-color: var(--secondary);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--secondary);
+            color: var(--darker);
+            box-shadow: 0 0 30px var(--secondary);
+        }
+
+        .btn-danger {
+            border-color: var(--tertiary);
+            box-shadow: 0 0 20px rgba(255, 0, 128, 0.2);
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: var(--tertiary);
+            color: var(--darker);
+            box-shadow: 0 0 30px var(--tertiary);
+        }
+
+        .cyber-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .emotion-viewer {
+            background: linear-gradient(135deg, rgba(0, 255, 157, 0.1), rgba(0, 212, 255, 0.1));
+            border: 2px solid rgba(0, 255, 157, 0.3);
+            border-radius: 15px;
+            padding: 50px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .emotion-icon {
+            font-size: 7rem;
+            margin-bottom: 25px;
+            filter: drop-shadow(0 0 30px currentColor);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-20px) rotate(5deg);
+            }
+        }
+
+        .emotion-label {
+            font-family: 'Orbitron', monospace;
+            font-size: 2.5rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            text-shadow: 0 0 20px currentColor;
+        }
+
+        .emotion-meta {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 25px;
+            letter-spacing: 2px;
+        }
+
+        .confidence-meter {
+            width: 100%;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(0, 255, 157, 0.3);
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--darker);
+            box-shadow: 0 0 20px var(--primary);
+        }
+
+        .emotion-spectrum {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .spectrum-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .spectrum-label {
+            font-family: 'Orbitron', monospace;
+            min-width: 120px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+        }
+
+        .spectrum-bar {
+            flex: 1;
+            height: 35px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 255, 157, 0.2);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .spectrum-fill {
+            height: 100%;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 0.85rem;
+            position: relative;
+        }
+
+        .spectrum-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%);
+            }
+
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        .history-log {
+            max-height: 350px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .history-log::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .history-log::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+        }
+
+        .history-log::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
+        }
+
+        .log-entry {
+            background: rgba(0, 0, 0, 0.4);
+            border-left: 4px solid;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            animation: slideIn 0.4s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .log-entry:hover {
+            background: rgba(0, 0, 0, 0.6);
+            transform: translateX(5px);
+        }
+
+        .log-emotion {
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: 1px;
+        }
+
+        .log-time {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-family: 'Rajdhani', monospace;
+        }
+
+        .scanner-loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+            position: relative;
+        }
+
+        .scanner-loading.active {
+            display: block;
+        }
+
+        .scanner-ring {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            border: 4px solid rgba(0, 255, 157, 0.1);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: scan-rotate 1s linear infinite;
+            box-shadow: 0 0 20px var(--primary);
+        }
+
+        @keyframes scan-rotate {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .scanner-text {
+            font-family: 'Orbitron', monospace;
+            font-size: 1rem;
+            color: var(--primary);
+            letter-spacing: 3px;
+            animation: pulse-text 1.5s infinite;
+        }
+
+        @keyframes pulse-text {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            .header {
+                padding: 40px 20px;
+            }
+
+            .cyber-card {
+                padding: 20px;
+            }
+
+            .video-wrapper {
+                height: 300px;
+            }
+
+            .emotion-icon {
+                font-size: 5rem;
+            }
+
+            .emotion-label {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="cyber-bg"></div>
+    <div class="grid-overlay"></div>
+
+    <div class="container">
+        <div class="header">
+            <div class="logo">NEURAL SCANNER</div>
+            <div class="tagline">▸ Real-Time Emotion Detection AI ◂</div>
+        </div>
+
+        <div class="main-grid">
+            <div class="cyber-card">
+                <div class="card-header">Visual Input Stream</div>
+
+                <div class="video-wrapper">
+                    <video id="video" autoplay></video>
+                    <canvas id="canvas"></canvas>
+
+                    <div class="status-bar">
+                        <div class="status-dot" id="statusDot"></div>
+                        <span id="statusText">OFFLINE</span>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button class="cyber-btn btn-primary" id="startBtn">▸ INITIALIZE</button>
+                    <button class="cyber-btn btn-secondary" id="scanBtn" disabled>◈ SCAN</button>
+                    <button class="cyber-btn btn-danger" id="stopBtn" disabled>◼ TERMINATE</button>
+                </div>
+
+                <div class="scanner-loading" id="loading">
+                    <div class="scanner-ring"></div>
+                    <div class="scanner-text">ANALYZING NEURAL PATTERNS...</div>
+                </div>
+            </div>
+
+            <div class="cyber-card">
+                <div class="card-header">Emotion Analysis</div>
+
+                <div class="emotion-viewer" id="emotionViewer">
+                    <div class="emotion-icon">🧠</div>
+                    <div class="emotion-label" id="emotionLabel">AWAITING SCAN</div>
+                    <div class="emotion-meta" id="emotionMeta">No data available</div>
+
+                    <div class="confidence-meter">
+                        <div class="confidence-fill" id="confidenceFill" style="width: 0%">0%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-grid" style="margin-top: 30px;">
+            <div class="cyber-card">
+                <div class="card-header">Emotion Spectrum Analysis</div>
+
+                <div class="emotion-spectrum" id="emotionSpectrum">
+                    <div class="empty-state">▸ Initiate scan to view detailed analysis ◂</div>
+                </div>
+            </div>
+
+            <div class="cyber-card">
+                <div class="card-header">Detection Log</div>
+
+                <div class="history-log" id="historyLog">
+                    <div class="empty-state">▸ No detections logged ◂</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api/detect';
+
+        const EMOTIONS = {
+            happy: { icon: '😊', color: '#FFD700' },
+            sad: { icon: '😢', color: '#4A90E2' },
+            angry: { icon: '😠', color: '#FF4757' },
+            surprise: { icon: '😲', color: '#FFA502' },
+            fear: { icon: '😨', color: '#A55EEA' },
+            disgust: { icon: '🤢', color: '#26DE81' },
+            neutral: { icon: '😐', color: '#778CA3' }
+        };
+
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const startBtn = document.getElementById('startBtn');
+        const scanBtn = document.getElementById('scanBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const loading = document.getElementById('loading');
+        const emotionLabel = document.getElementById('emotionLabel');
+        const emotionMeta = document.getElementById('emotionMeta');
+        const confidenceFill = document.getElementById('confidenceFill');
+        const emotionSpectrum = document.getElementById('emotionSpectrum');
+        const historyLog = document.getElementById('historyLog');
+
+        let stream = null;
+        let history = [];
+
+        startBtn.addEventListener('click', async () => {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: { ideal: 1280 }, height: { ideal: 720 } }
+                });
+
+                video.srcObject = stream;
+                statusDot.classList.add('active');
+                statusText.textContent = 'ONLINE';
+
+                startBtn.disabled = true;
+                scanBtn.disabled = false;
+                stopBtn.disabled = false;
+            } catch (error) {
+                alert('Camera access denied: ' + error.message);
+            }
+        });
+
+        stopBtn.addEventListener('click', () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+
+                statusDot.classList.remove('active');
+                statusText.textContent = 'OFFLINE';
+
+                startBtn.disabled = false;
+                scanBtn.disabled = true;
+                stopBtn.disabled = true;
+            }
+        });
+
+        scanBtn.addEventListener('click', async () => {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+
+            const imageData = canvas.toDataURL('image/jpeg', 0.8);
+
+            loading.classList.add('active');
+            scanBtn.disabled = true;
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: imageData })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    displayEmotion(result);
+                    updateSpectrum(result.emotions);
+                    addToHistory(result);
+                } else {
+                    alert('Detection failed: ' + result.error);
+                }
+            } catch (error) {
+                alert('Network error: ' + error.message);
+            } finally {
+                loading.classList.remove('active');
+                scanBtn.disabled = false;
+            }
+        });
+
+        function displayEmotion(data) {
+            const emotion = data.dominant_emotion;
+            const meta = EMOTIONS[emotion];
+
+            emotionLabel.textContent = emotion.toUpperCase();
+            emotionLabel.style.color = meta.color;
+
+            document.querySelector('.emotion-icon').textContent = meta.icon;
+            emotionMeta.textContent = data.metadata.description || '';
+
+            confidenceFill.style.width = data.confidence + '%';
+            confidenceFill.textContent = data.confidence + '%';
+            confidenceFill.style.background = `linear-gradient(90deg, ${meta.color}, ${meta.color}dd)`;
+        }
+
+        function updateSpectrum(emotions) {
+            emotionSpectrum.innerHTML = '';
+
+            const sorted = Object.entries(emotions).sort((a, b) => b[1] - a[1]);
+
+            sorted.forEach(([emotion, value]) => {
+                const meta = EMOTIONS[emotion];
+
+                const item = document.createElement('div');
+                item.className = 'spectrum-item';
+                item.innerHTML = `
+                    <div class="spectrum-label" style="color: ${meta.color}">
+                        ${meta.icon} ${emotion.toUpperCase()}
+                    </div>
+                    <div class="spectrum-bar">
+                        <div class="spectrum-fill" style="width: ${value}%; background: ${meta.color}">
+                            ${value.toFixed(1)}%
+                        </div>
+                    </div>
+                `;
+
+                emotionSpectrum.appendChild(item);
+            });
+        }
+
+        function addToHistory(data) {
+            const time = new Date().toLocaleTimeString();
+            const emotion = data.dominant_emotion;
+            const meta = EMOTIONS[emotion];
+
+            history.unshift({ emotion, time, color: meta.color, icon: meta.icon });
+            if (history.length > 15) history.pop();
+
+            renderHistory();
+        }
+
+        function renderHistory() {
+            historyLog.innerHTML = '';
+
+            history.forEach(entry => {
+                const log = document.createElement('div');
+                log.className = 'log-entry';
+                log.style.borderLeftColor = entry.color;
+                log.innerHTML = `
+                    <div class="log-emotion" style="color: ${entry.color}">
+                        ${entry.icon} ${entry.emotion.toUpperCase()}
+                    </div>
+                    <div class="log-time">${entry.time}</div>
+                `;
+                historyLog.appendChild(log);
+            });
+        }
+    </script>
+</body>
+
+</html>
